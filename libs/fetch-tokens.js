@@ -1,8 +1,9 @@
 const fetch = require('node-fetch')
+const config = require('../openstack-config')
 
 module.exports = async function (username, password) {
     try {
-        return await fetch('http://192.168.44.12:5000/v3/auth/tokens', {
+        return await fetch(`${config.keystone_url}/auth/tokens`, {
             method: 'post',
             body: JSON.stringify({
                 "auth": {

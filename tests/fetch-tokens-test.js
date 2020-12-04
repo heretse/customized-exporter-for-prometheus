@@ -1,7 +1,8 @@
-var fetchTokens = require('../libs/fetch-tokens');
+const config = require('../openstack-config');
+const fetchTokens = require('../libs/fetch-tokens');
 
 (async() => {
-    let token = await fetchTokens('admin', 'admin')
+    let token = await fetchTokens(config.username, config.password)
 
     console.log(token)
 })();

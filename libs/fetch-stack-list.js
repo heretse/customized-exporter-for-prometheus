@@ -2,10 +2,11 @@
 // var keystone = new OSWrap.Keystone('http://192.168.44.12:5000/v3');
  
 const fetch = require('node-fetch');
+const config = require('../openstack-config')
 
 module.exports = async function(project_token) {
     try {
-        return await fetch('http://192.168.44.12:8004/v1/admin/stacks', {
+        return await fetch(`${config.orchestration_url}/${config.tenant_id}/stacks`, {
             headers: { 'X-Auth-Token': project_token },
         })
         .then(async res => await res.json())

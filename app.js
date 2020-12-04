@@ -2,53 +2,46 @@
 var http = require('http');
 var url = require('url');
 
+const config = require('./openstack-config')
+const fetchTokens = require('./libs/fetch-tokens')
+const fetchStackList = require('./libs/fetch-stack-list')
+
 // Create http server.
 var httpServer = http.createServer(function (req, res) {
 
     // Get client request url.
-    var reqUrlString = req.url;
+    var reqUrlString = req.url
 
     // Get client request path name.
-    var pathName = url.parse(reqUrlString, true, false).pathname;
+    var urlParsed = url.parse(reqUrlString, true, false)
+    var pathName = urlParsed.pathname
+    var queryData = urlParsed.query
 
     // If request login action.
-    if('/input' == pathName)
+    if('/stacksCount' == pathName)
     {
         // Get request method.
-        var method = req.method;
+        var method = req.method
 
-        // If post.
-        if("POST" == method)
-        {
-            var postData = '';
+        // If get.
+        if ("GET" === method) {
+            console.log(queryData.stack_name);
 
-            // Get all post data when receive data event.
-            req.on('data', function (chunk) {
+            (async() => {
+                let token = await fetchTokens(config.username, config.password)
 
-                postData += chunk;
+                let stacks = await fetchStackList(token)
 
-            });
+                var re = new RegExp(queryData.stack_name)
 
-            // When all request post data has been received.
-            req.on('end', function () {
-
-                console.log("Client post data : " + postData);
-
-                // Parse the post data and get client sent username and password.
-                var postDataObject = JSON.parse(postData);
-
-                /* Set Access-Control-Allow-Origin http header will fix No 'Access-Control-Allow-Origin' header is present on the requested resource error
-                   when use XMLHttpRequest object to get this server page via ajax method. */
-                res.setHeader('Content-Type', 'text/json');
-                res.writeHead(200, {'Access-Control-Allow-Origin':'*'});
-
-                res.end(postData);
-            })
+                res.setHeader('Content-Type', 'text/json')
+                res.end(JSON.stringify({ name: queryData.stack_name, count: stacks.filter(stack => re.test(stack.stack_name)).length }))
+            })();
         }
     }
 });
 
-// Http server listen on port 8888.
-httpServer.listen(8888);
+// Http server listen on port 3000.
+httpServer.listen(process.env.PORT || 3000)
 
-console.log("Server is started.");
+console.log(`Server is started and listening on port ${httpServer.address().port}.`)
