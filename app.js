@@ -38,6 +38,31 @@ var httpServer = http.createServer(function (req, res) {
                 res.end(JSON.stringify({ name: queryData.stack_name, count: stacks.filter(stack => re.test(stack.stack_name)).length }))
             })();
         }
+    } else if('/metrics' == pathName)
+    {
+        // Get request method.
+        var method = req.method
+
+        if ("GET" === method) {
+            (async() => {
+                let token = await fetchTokens(config.username, config.password)
+
+                let stacks = await fetchStackList(token)
+
+                var re = new RegExp(config.stackname_filter)
+
+                res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
+
+                // {cloud="mycloud",hypervisor_hostname="controller-0",nova_service_status="enabled"} 33.0
+                
+                let stackCount = stacks.filter(stack => re.test(stack.stack_name)).length
+
+                res.end(
+                    `opentack_stack_total{filter="${config.stackname_filter}"} ${stackCount}`
+                )
+                //res.end(JSON.stringify({ name: queryData.stack_name, count:  }))
+            })();
+        }
     }
 });
 
