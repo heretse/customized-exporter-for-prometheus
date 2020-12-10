@@ -58,9 +58,9 @@ var httpServer = http.createServer(function (req, res) {
                 let stackCount = stacks.filter(stack => re.test(stack.stack_name)).length
 
                 res.end(
-                    `opentack_stack_total{filter="${config.stackname_filter}"} ${stackCount}`
+                    `opentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
                 )
-                //res.end(JSON.stringify({ name: queryData.stack_name, count:  }))
+
             })();
         }
     }
