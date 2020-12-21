@@ -44,24 +44,29 @@ var httpServer = http.createServer(function (req, res) {
         var method = req.method
 
         if ("GET" === method) {
-            (async() => {
-                let token = await fetchTokens(config.username, config.password)
-
-                let stacks = await fetchStackList(token)
-
-                var re = new RegExp(config.stackname_filter)
-
-                res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
-
-                // {cloud="mycloud",hypervisor_hostname="controller-0",nova_service_status="enabled"} 33.0
-                
-                let stackCount = stacks.filter(stack => re.test(stack.stack_name)).length
+            if (process.env.DEBUG) {
+                let stackCount = Math.round(Math.random() * 10).toFixed(1)
 
                 res.end(
-                    `opentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
+                    `# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
                 )
+            } else {
+                (async() => {
+                    let token = await fetchTokens(config.username, config.password)
 
-            })();
+                    let stacks = await fetchStackList(token)
+
+                    var re = new RegExp(config.stackname_filter)
+
+                    res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
+
+                    stackCount = stacks.filter(stack => re.test(stack.stack_name)).length.toFixed(1)
+
+                    res.end(
+                        `# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
+                    )
+                })();
+            }
         }
     }
 });

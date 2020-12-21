@@ -1,6 +1,3 @@
-// var OSWrap = require('openstack-heat-wrapper');
-// var keystone = new OSWrap.Keystone('http://192.168.44.12:5000/v3');
- 
 const fetch = require('node-fetch');
 const config = require('../openstack-config')
 
