@@ -1,6 +1,6 @@
 {
-  "name": "my-server",
-  "version": "1.0.0",
+  "name": "customized-exporter",
+  "version": "0.1.0",
   "description": "",
   "main": "app.js",
   "scripts": {
@@ -12,6 +12,7 @@
   "dependencies": {
     "http": "0.0.1-security",
     "node-fetch": "^2.6.1",
+    "node-imei": "^1.0.8",
     "url": "^0.11.0"
   }
 }

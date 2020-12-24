@@ -1,0 +1,13 @@
+/.vscode
+/node_modules
+.DS_Store
+.dockerignore
+.env
+.git
+.gitignore
+.jshintrc
+.project
+.settings
+.tern-project
+Dockerfile
+README.md

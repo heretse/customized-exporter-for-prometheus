@@ -1,10 +1,12 @@
 // Include http ,url module.
 var http = require('http');
 var url = require('url');
+var imei = require('node-imei');
 
 const config = require('./openstack-config')
 const fetchTokens = require('./libs/fetch-tokens')
 const fetchStackList = require('./libs/fetch-stack-list')
+var IMEI = new imei()
 
 // Create http server.
 var httpServer = http.createServer(function (req, res) {
@@ -45,11 +47,32 @@ var httpServer = http.createServer(function (req, res) {
 
         if ("GET" === method) {
             if (process.env.DEBUG) {
-                let stackCount = Math.round(Math.random() * 10).toFixed(1)
+                let stackCount = 1.0
 
-                res.end(
-                    `# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
-                )
+                if (stackCount >= 1) {
+                    stackCount += Math.round(Math.random() * 10).toFixed(1) % 2
+                }
+
+                let hackedCount = Math.round(Math.random() * 10).toFixed(1) % 3
+
+                let numberAttacks = Math.round(Math.random() * 5 + 1).toFixed(1) % 3
+                let ipAddr = `10.10.10.${Math.round(Math.random() * 255 + 1).toFixed(0)}`
+                let attackType = "ddos"
+
+                let text = "# HELP specificed_stackname_count Specificed stack size\n"
+
+                text += "# TYPE specificed_stackname_count gauge\n"
+                text += `opentack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`
+
+                text += "# HELP hacked_ue_count Hacked UE count\n"
+                text += "# TYPE hacked_ue_count gauge\n"
+                text += `hacked_ue_total{type="mifi"} ${hackedCount}\n`
+
+                text += "# HELP ue_under_attack Attacks metrics (Number of attacks)\n"
+                text += "# TYPE ue_under_attack gauge\n"
+                text += `ue_under_attack{type="${attackType}" imei="${IMEI.random()}" ip="${ipAddr}"} ${numberAttacks}`
+                
+                res.end(text)
             } else {
                 (async() => {
                     let token = await fetchTokens(config.username, config.password)
