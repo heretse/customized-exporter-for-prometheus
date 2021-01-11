@@ -1,0 +1,1 @@
+exports.base_url = 'https://192.168.44.138/rest'

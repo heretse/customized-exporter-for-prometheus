@@ -6,6 +6,12 @@ var imei = require('node-imei');
 const config = require('./openstack-config')
 const fetchTokens = require('./libs/fetch-tokens')
 const fetchStackList = require('./libs/fetch-stack-list')
+const fetchDeviceList = require('./libs/fetch-mns-device-list');
+
+const fetchLogin = require('./libs/fetch-adp-login');
+const fetchPtuser = require('./libs/fetch-adp-ptuser');
+const fetchLogout = require('./libs/fetch-adp-logout');
+
 var IMEI = new imei()
 
 // Create http server.
@@ -53,26 +59,27 @@ var httpServer = http.createServer(function (req, res) {
                     stackCount += Math.round(Math.random() * 10).toFixed(1) % 2
                 }
 
-                let hackedCount = Math.round(Math.random() * 10).toFixed(1) % 3
-
-                let numberAttacks = Math.round(Math.random() * 5 + 1).toFixed(1) % 3
+                let hackedCount = Math.round(Math.random() * 10 + 1).toFixed(0)
+                let numberAttacks = Math.round(Math.random() * 1000 + 1).toFixed(1) % 3
                 let ipAddr = `10.10.10.${Math.round(Math.random() * 255 + 1).toFixed(0)}`
-                let attackType = "ddos"
 
-                let text = "# HELP specificed_stackname_count Specificed stack size\n"
+                let attackTypes = ["TCP Port SYN Scan", "TCP SYN Flood", "Smurf", "Ping of Death", "LAND Attack", "Teardrop"]
+                let attackType = attackTypes[Math.round(Math.random() * 1000).toFixed(0) % attackTypes.length]
 
-                text += "# TYPE specificed_stackname_count gauge\n"
-                text += `opentack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`
+                res.write("# HELP specificed_stackname_count Specificed stack size\n")
 
-                text += "# HELP hacked_ue_count Hacked UE count\n"
-                text += "# TYPE hacked_ue_count gauge\n"
-                text += `hacked_ue_total{type="mifi"} ${hackedCount}\n`
+                res.write("# TYPE specificed_stackname_count gauge\n")
+                res.write(`openstack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`)
 
-                text += "# HELP ue_under_attack Attacks metrics (Number of attacks)\n"
-                text += "# TYPE ue_under_attack gauge\n"
-                text += `ue_under_attack{type="${attackType}" imei="${IMEI.random()}" ip="${ipAddr}"} ${numberAttacks}`
+                res.write("# HELP hacked_ue_count Hacked UE count\n")
+                res.write("# TYPE hacked_ue_count gauge\n")
+                res.write(`hacked_ue_total{type="mifi"} ${hackedCount}\n`)
+
+                res.write("# HELP ue_under_attack Attacks metrics (Number of attacks)\n")
+                res.write("# TYPE ue_under_attack gauge\n")
+                res.write(`ue_under_attack{type="${attackType}" imei="${IMEI.random()}" ip="${ipAddr}"} ${numberAttacks}`)
                 
-                res.end(text)
+                res.end()
             } else {
                 (async() => {
                     let token = await fetchTokens(config.username, config.password)
@@ -85,9 +92,43 @@ var httpServer = http.createServer(function (req, res) {
 
                     stackCount = stacks.filter(stack => re.test(stack.stack_name)).length.toFixed(1)
 
-                    res.end(
-                        `# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}`
-                    )
+                    res.write(`# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`)
+
+                    let devices = await fetchDeviceList()
+
+                    let hackedCount = devices.filter(device => device.hacked_status > 0).length
+
+                    res.write("# HELP hacked_ue_count Hacked UE count\n")
+                    res.write("# TYPE hacked_ue_count gauge\n")
+                    res.write(`hacked_ue_total{type="mifi"} ${hackedCount}\n`)
+
+                    let session_id = await fetchLogin()
+                    let statistic = await fetchPtuser(session_id)
+                    let status = await fetchLogout(session_id)
+
+                    let result = []
+
+                    statistic.map(device => {
+                        device.layer2.forEach(attack => {
+                            attack.ip = device.key
+                            let foundObj = devices.find(element => element.ip === device.key)
+                            attack.imei = foundObj ? foundObj.imei : ""
+                            attack.type = attack.key
+                            delete attack["key"]
+                        })
+
+                        return device.layer2
+                    }).forEach(attacks => {
+                        result = result.concat(attacks)
+                    })
+
+                    res.write("# HELP ue_under_attack Attacks metrics (Number of attacks)\n")
+                    res.write("# TYPE ue_under_attack gauge\n")
+                    result.forEach(attack => {    
+                        res.write(`ue_under_attack{type="${attack.type}" imei="${attack.imei}" ip="${attack.ip}"} ${attack.count}\n`)
+                    })
+
+                    res.end()
                 })();
             }
         }
