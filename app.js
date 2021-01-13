@@ -92,19 +92,21 @@ var httpServer = http.createServer(function (req, res) {
 
                     stackCount = stacks.filter(stack => re.test(stack.stack_name)).length.toFixed(1)
 
-                    res.write(`# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopentack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`)
+                    res.write(`# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopenstack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`)
 
                     let devices = await fetchDeviceList()
 
-                    let hackedCount = devices.filter(device => device.hacked_status > 0).length
+                    // let hackedCount = devices.filter(device => device.hacked_status > 0).length
 
                     res.write("# HELP hacked_ue_count Hacked UE count\n")
                     res.write("# TYPE hacked_ue_count gauge\n")
-                    res.write(`hacked_ue_total{type="mifi"} ${hackedCount}\n`)
 
                     let session_id = await fetchLogin()
                     let statistic = await fetchPtuser(session_id)
                     let status = await fetchLogout(session_id)
+
+                    let hackedCount = statistic.length
+                    res.write(`hacked_ue_total{type="mifi"} ${hackedCount}\n`)
 
                     let result = []
 

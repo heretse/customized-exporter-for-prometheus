@@ -1,7 +1,7 @@
 const fetchStackList = require('../libs/fetch-stack-list');
 
 (async() => {
-    let stacks = await fetchStackList('gAAAAABfyZo6Sq2mLZWdGjAP_1FVLSiHKCV45gXxEZWkeWV2GGTyX2qgjBKVbISEkmCf-DHYSPlvuBlNdW_x1iv498PgYj8Hlg6jS_k4NY2eQYkPQ1Xjj8mvHhBkDvwtC_Q1n-ZmDuML7MlxW9Cke9bqbrdZYpe-E1_Ohe3D2lUF7boU8UWzYWc')
+    let stacks = await fetchStackList('gAAAAABf_VZUm4jTBigF4tLJqE8Y0PBSFcUyRLLqK3j6qR4p4ctxVaiJA4n4vZiTITNvzCot79e2D-ydtAwdVZV3XE03YGgJbVtfgc6f4qfJ-VtuF7lJjWiYweQWvI9uuaq0CLjnhF2Jano_WE_tynl0O2vgg39Kp7T7lTEWfNpgb9BsN4p-tPA')
 
     stacks.map(stack => stack.stack_name).forEach(element => console.log(element))
 })();

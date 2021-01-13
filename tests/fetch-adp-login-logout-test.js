@@ -10,7 +10,7 @@ const fetchLogout = require('../libs/fetch-adp-logout');
 
     let statistic = await fetchPtuser(session_id)
 
-    console.log(statistic)
+    console.log(JSON.stringify(statistic))
 
     let status = await fetchLogout(session_id)
 
