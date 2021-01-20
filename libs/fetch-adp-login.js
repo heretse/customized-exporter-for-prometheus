@@ -8,7 +8,7 @@ module.exports = async function () {
             body: "",
             headers: {
                 'Authorization': 'ZETA',
-                'login': 'admin',
+                'login': 'nms_api',
                 'passHash': 'd864934644cd577757afa824138ae169fd5ecbed'
             },
         })
