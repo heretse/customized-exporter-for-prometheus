@@ -6,6 +6,7 @@ var imei = require('node-imei');
 const config = require('./openstack-config')
 const fetchTokens = require('./libs/fetch-tokens')
 const fetchStackList = require('./libs/fetch-stack-list')
+const fetchVMList = require('./libs/fetch-vm-list')
 const fetchDeviceList = require('./libs/fetch-mns-device-list');
 
 const fetchLogin = require('./libs/fetch-adp-login');
@@ -84,13 +85,15 @@ var httpServer = http.createServer(function (req, res) {
                 (async() => {
                     let token = await fetchTokens(config.username, config.password)
 
-                    let stacks = await fetchStackList(token)
+                    // let stacks = await fetchStackList(token)
+                    let servers = await fetchVMList(token)
 
                     var re = new RegExp(config.stackname_filter)
 
                     res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
 
-                    stackCount = stacks.filter(stack => re.test(stack.stack_name)).length.toFixed(1)
+                    // stackCount = stacks.filter(stack => re.test(stack.stack_name)).length.toFixed(1)
+                    stackCount = servers.filter(server => re.test(server.name)).length.toFixed(1)
 
                     res.write(`# HELP specificed_stackname_count Specificed stack size\n# TYPE specificed_stackname_count gauge\nopenstack_stack_total{name="${config.stackname_filter}"} ${stackCount}\n`)
 
